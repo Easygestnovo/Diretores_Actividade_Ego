@@ -20996,6 +20996,13 @@ function exportPaneExcel(button) {
     if (isAgencyVcPane) return list.filter(row => ['brunorodrigues', 'nunomarques', 'joaocosta', 'jp'].includes(String(row?.[field] || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/gi, '').toLowerCase()));
     return list.filter(row => sameText(row?.[field], directorName));
   };
+  const directorCostRows = (rows, field) => {
+    const list = directionRowsForScope(rows, pane);
+    if (isUmPane) return [];
+    if (isAgencyPane || isAgencyUmPane || isAgencyVcPane) return directorRows(rows, field);
+    return list.filter(row => sameText(row?.[field], directorName)
+      || (sameText(row?.[field], 'Agência') && sameText(row?.['Gestão Origem'], directorName)));
+  };
   const blockTitle = (table, index) => {
     const block = table.closest('.card, .exec-month-card, .exec-store-card, .exec-detail-section, .um-card, .um-store-card, .chart-primary, .chart-secondary');
     const directTitle = block?.querySelector('.card-title, h3, summary strong')?.textContent;
@@ -21032,11 +21039,11 @@ function exportPaneExcel(button) {
   });
   tableFromRows('Detalhe — Comissões geradas Mediação', directorRows((typeof detailData !== 'undefined') ? detailData : [], 'Gestão'));
   tableFromRows('Detalhe — Comissão a Receber Direção Mediação', directorRows(isOpenPane && typeof dirMediaOpenData !== 'undefined' ? dirMediaOpenData : ((typeof dirMediaData !== 'undefined') ? dirMediaData : []), 'Direcção'));
-  tableFromRows('Detalhe — Custos VC Mediação', directorRows((typeof costDetailData !== 'undefined') ? costDetailData : [], 'Diretor Imputado'));
-  tableFromRows('Detalhe — Custos UM Mediação', directorRows((typeof umCostDetailData !== 'undefined') ? umCostDetailData : [], 'Diretor Imputado'));
+  tableFromRows('Detalhe — Custos VC Mediação', directorCostRows((typeof costDetailData !== 'undefined') ? costDetailData : [], 'Diretor Imputado'));
+  tableFromRows('Detalhe — Custos UM Mediação', directorCostRows((typeof umCostDetailData !== 'undefined') ? umCostDetailData : [], 'Diretor Imputado'));
   tableFromRows('Detalhe — Comissões geradas Crédito', directorRows((typeof creditDetailData !== 'undefined') ? creditDetailData : [], 'Gestão'));
   tableFromRows('Detalhe — Comissão a Receber Direção Crédito', directorRows(isOpenPane && typeof dirCreditOpenData !== 'undefined' ? dirCreditOpenData : ((typeof dirCreditData !== 'undefined') ? dirCreditData : []), 'Direcção'));
-  tableFromRows('Detalhe — Custos Crédito', directorRows((typeof creditCostDetailData !== 'undefined') ? creditCostDetailData : [], 'Diretor Imputado'));
+  tableFromRows('Detalhe — Custos Crédito', directorCostRows((typeof creditCostDetailData !== 'undefined') ? creditCostDetailData : [], 'Diretor Imputado'));
   if (!sections.length) return;
   const html = `<!doctype html><html><head><meta charset="utf-8"><style>body{font-family:Arial,sans-serif}table{border-collapse:collapse;margin-bottom:18px;width:100%}th,td{border:1px solid #999;padding:5px 8px}th{background:#dbeafe}h1,h2{color:#17365d}</style></head><body><h1>${escapeHtml(title)}</h1>${sections.join('')}</body></html>`;
   const blob = new Blob(['\ufeff', html], {type:'application/vnd.ms-excel;charset=utf-8;'});
